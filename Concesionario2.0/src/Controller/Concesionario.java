@@ -13,7 +13,7 @@ public class Concesionario {
 
 
     private View view;
-    private float money;
+    private double money;
     private double highestPrice = 500000;
     private double lowestPrice = 90000;
 
@@ -36,9 +36,9 @@ public class Concesionario {
      * */
     public void declarateVendedores() {
 
-        sellers.add(new Seller("Juan", "3283782A","+34 92472874", 0, null, 0, 0));
-        sellers.add(new Seller("Pedro", "3283782A", "+34 9244574", 0, null, 0, 0));
-        sellers.add(new Seller("Ana", "3283782A", "+34 755672874",0, null, 0, 0));
+        sellers.add(new Seller("Juan", "3283782A","+34 92472874", 0, null, 0));
+        sellers.add(new Seller("Pedro", "3283782A", "+34 9244574", 0, null, 0));
+        sellers.add(new Seller("Ana", "3283782A", "+34 755672874",0, null, 0));
     }
 
 
@@ -85,18 +85,20 @@ public class Concesionario {
                         searchCar();
                         break;
 
-                    //case MANAGE_SELLERS:
-                    //    manageSellers();
-
+                    case MANAGE_SELLERS:
+                        manageSellers();
+                        break;
 
                     case SELL_CAR:
                         sellCar();
-//
-                    //case SEE_DILER_STATS:
-                    //    seeDilerStats();
-//
-                    //case EXIT:
-                    //    salir = true;
+                        break;
+
+                    case SEE_DILER_STATS:
+                        dilerStats();
+                        break;
+
+                    case EXIT:
+                        salir = true;
                 }
 
             }catch(Exception e) {
@@ -117,7 +119,8 @@ public class Concesionario {
      * @param cars
      * @return
      */
-    private void showCars(ArrayList<Car> cars) {
+    private boolean showCars(ArrayList<Car> cars) {
+        boolean empty = false;
 
         for (Car c : cars) {
             if(!c.isSold()) {
@@ -126,26 +129,29 @@ public class Concesionario {
         }
         if(unsoldCars.isEmpty()) {
             view.errorMessage("No tenemos coches disponibles", COLORES);
+            empty = true;
         }else {
             view.showCars(unsoldCars);
             unsoldCars.clear();
         }
+        return empty;
     }
 
 
     /**Pide los datos del coche a coomprar para guardar el nuevo coche y le resta el precio del coche al presupuesto del concesionario*/
     private void buyCar() {
-        double expent = 0;
 
         view.message("Necesito los datos del coche");
         view.message("-----------------------------");
 
-        cars.add(new Car(askBrand(), askModel(), askYear(), askPrice(), askNumberPlate(), false, askKm()));
-        expent = cars.getLast().getPrice();
+        Car car = new Car(askBrand(), askModel(), askYear(), askPrice(), askNumberPlate(), false, askKm());
 
-        this.money -= expent ;
+        cars.add(car);
 
         view.message("Coche añadido");
+
+        //Resto el dinero que se gastó en la compra del coche
+        calculateBuys(car);
 
         //Compruebo si el nuevo tiene un precio mayor o menor al maximo o minimo establecidos
         stablishLowestPrice();
@@ -247,27 +253,93 @@ public class Concesionario {
             view.message("-------------------");
             view.showCars(foundCars);
         }
-
     }
 
 
 
     public void sellCar(){
+        view.message("Necesito los datos del comprador:");
         Cliente client = addClient();
+        view.message("Ahora necesito los datos del vendedor:");
         Seller seller = addSeller();
         Car car = null;
         int choise = 0;
+        boolean empty;
 
         view.message("A continuacion te muestro los coches disponibles");
-        showCars(cars);
-        view.message("Dame el numero del coche que te interesa");
-        view.message("----------------------------------------");
-        choise = sc.nextInt();
-        sc.nextLine();
+        empty = showCars(cars);
 
-        cars.get(choise -1).setSold(true);
+        if (!empty) {
+            view.message("Dame el numero del coche que te interesa");
+            view.message("----------------------------------------");
+            choise = sc.nextInt();
+            sc.nextLine();
 
-        sales.add(new Sale(cars.get(choise -1), client, seller, sales.size() + 1) );
+            cars.get(choise -1).setSold(true);
+
+            sales.add(new Sale(cars.get(choise -1), client, seller, sales.size() + 1) );
+
+            //Luego de cada venta se actualizan las estadisticas del vendedor que hizo la venta
+            sellerMoneyAverage(seller, car);
+            sellerMostExpensiveCar(seller, car);
+            sellerAddNewCar(seller);
+
+            //Luego se actualizan las estadisticas del concesionario
+            calculateSales(car);
+        }
+    }
+
+
+
+
+    public void manageSellers(){
+
+        while (true) {
+            try {
+                view.message("1. Agregar nuevo vendedor" + "\n" + "2. Ver estadisticas de vendedores");
+                int useImput = sc.nextInt();
+                sc.nextLine();
+
+                if(useImput < 1 || useImput > 2) {
+                    view.errorMessage("Ingrese un numero valido", COLORES);
+                }
+                if (useImput == 1) {
+                    addSeller();
+                    break;
+                }
+                if (useImput == 2) {
+                    sellerShowStats();
+                    break;
+                }
+            } catch (Exception e) {
+                view.errorMessage("Debe ingresar el numero 1 o el 2", COLORES);
+            }
+        }
+    }
+
+
+
+
+    public void dilerStats(){
+        int userimput;
+
+        while (true) {
+            userimput = view.stats();
+            if (userimput <= 1 || userimput > 28) {
+                view.errorMessage("Ingrese un numero entre el 1 y el 28", COLORES);
+            }else {
+                break;
+            }
+        }
+
+        switch(userimput) {
+            case 1:
+
+                break;
+            case 2:
+        }
+
+
 
     }
 
@@ -431,7 +503,7 @@ public class Concesionario {
     public String askdni() {
         String dni;
         while (true) {
-            view.message("Dame el dni del comprador");
+            view.message("Dame el dni");
             dni = sc.nextLine();
 
             if(dni.equals("")) {
@@ -449,7 +521,7 @@ public class Concesionario {
     public String askName() {
         String name;
         while(true){
-            view.message("Dame el nombre del comprador");
+            view.message("Dame el nombre");
             name = sc.nextLine();
 
             if(name.equals("")) {
@@ -467,7 +539,7 @@ public class Concesionario {
     public String askPhone() {
         String phone;
         while(true){
-            view.message("Dame el telefono del comprador");
+            view.message("Dame el telefono");
             phone = sc.nextLine();
             if(phone.equals("")) {
                 view.errorMessage("Debe ingresar el telefono", COLORES);
@@ -527,7 +599,7 @@ public class Concesionario {
 
         for (Seller c : sellers) {
             if (c.getDni().equals(dni)) {
-                view.message("Veo que ya es cliente nuestro");
+                view.message("Veo que ya es vendedor nuestro");
                 ourSeller = true;
                 seller = c;
             }
@@ -537,11 +609,72 @@ public class Concesionario {
 
             phone = askPhone();
 
-            sellers.add(new Seller(dni, name, phone, 0, null, 0, 0));
+            sellers.add(new Seller(dni, name, phone, 0, null, 0));
             seller = sellers.getLast();
         }
 
         return seller;
+    }
+
+
+    public void sellerMoneyAverage(Seller seller, Car car) {
+        double newAmount = seller.getMoneyAverage() + car.getPrice();
+        seller.setMoneyAverage(newAmount);
+    }
+
+
+
+    public void sellerMostExpensiveCar(Seller seller, Car car){
+        if (seller.getMostExpensiveCar() == null || car.getPrice() > seller.getMostExpensiveCar().getPrice()) {
+            seller.setMostExpensiveCar(car);
+        }
+    }
+
+
+
+
+    public void sellerAddNewCar(Seller seller) {
+        seller.setCarsSold(seller.getCarsSold() + 1);
+    }
+
+
+
+    public void sellerShowStats(){
+        ArrayList<Seller> sellersFound = new ArrayList<>();
+        boolean found = false;
+
+        while(!found){
+            view.message("Dame el nombre o el dni del vendedor");
+            String dato = sc.nextLine();
+
+            if(dato.equals("")) {
+                view.errorMessage("Debe ingresar uno de los datos del vendedor", COLORES);
+            }
+            for (Seller s : sellers) {
+                if(s.getName().toLowerCase().contains(dato) || dato.equals(s.getDni())) {
+                    sellersFound.add(s);
+                    found = true;
+                }
+            }
+            if (!found) {
+                view.errorMessage("No se encontro el vendedor", COLORES);
+            }else {
+                view.showSellers(sellersFound);
+            }
+
+        }
+    }
+
+
+
+    public void calculateBuys(Car car){
+        this.money -= car.getPrice();
+    }
+
+
+
+    public void calculateSales(Car car) {
+        this.money += car.getPrice();
     }
 
 
@@ -550,7 +683,7 @@ public class Concesionario {
     //Constructor
 
 
-    public Concesionario(View view, float money) {
+    public Concesionario(View view, double money) {
         this.view = view;
         this.money = money;
     }

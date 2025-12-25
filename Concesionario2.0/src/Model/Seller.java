@@ -2,20 +2,20 @@ package Model;
 
 public class Seller extends Person{
 
-    private double priceAverage;
+    private double moneyAverage;
     private Car mostExpensiveCar;
     private int carsSold;
-    private double totalCashEarned;
+
 
 
     //Constructor
 
-    public Seller(String name, String dni, String phone, double priceAverage, Car mostExpensiveCar, int carsSold,  double totalCashEarned) {
+    public Seller(String name, String dni, String phone, double moneyAverage, Car mostExpensiveCar, int carsSold) {
         super(name, dni, phone);
-        this.priceAverage = priceAverage;
+        this.moneyAverage = moneyAverage;
         this.mostExpensiveCar = mostExpensiveCar;
         this.carsSold = carsSold;
-        this.totalCashEarned = totalCashEarned;
+
     }
 
 
@@ -23,12 +23,12 @@ public class Seller extends Person{
 
     //Getters and setters
 
-    public double getPriceAverage() {
-        return priceAverage;
+    public double getMoneyAverage() {
+        return moneyAverage;
     }
 
-    public void setPriceAverage(double priceAverage) {
-        this.priceAverage = priceAverage;
+    public void setMoneyAverage(double moneyAverage) {
+        this.moneyAverage = moneyAverage;
     }
 
     public Car getMostExpensiveCar() {
@@ -47,15 +47,17 @@ public class Seller extends Person{
         this.carsSold = carsSold;
     }
 
-    public double getTotalCashEarned() {
-        return totalCashEarned;
+
+
+    public String toString(){
+
+        return "nombre: " + getName() +
+                " | dni: " + getDni() +
+                " | telefono: " + getPhone() +
+                " | dinero ganado: " + getMoneyAverage() +
+                " | coche mas caro vendido: " + getMostExpensiveCar() +
+                " | cantidad de coches vendidos: " + getCarsSold() +"\n";
     }
-
-    public void setTotalCashEarned(double totalCashEarned) {
-        this.totalCashEarned = totalCashEarned;
-    }
-
-
 
 
 }
